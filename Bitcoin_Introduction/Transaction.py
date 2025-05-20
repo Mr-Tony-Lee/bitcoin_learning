@@ -410,12 +410,13 @@ class Script:
                 result += int(cmd).to_bytes(1, 'little')
             else:
                 length = len(cmd)
-                if length < 75:
+                length = len(cmd)
+                if length <= 75:
                     result += length.to_bytes(1, 'little')
                 elif length > 75 and length < 256:
-                    result += b'\x76' + length.to_bytes(1, 'little')
-                elif length > 255 and length < 520:
-                    result += b'\x77' + length.to_bytes(2, 'little')
+                    result += b'\x4c' + length.to_bytes(1, 'little')
+                elif length > 255 and length <= 520:
+                    result += b'\x4d' + length.to_bytes(2, 'little')
                 else:
                     raise ValueError('script length too long')
                 result += cmd
