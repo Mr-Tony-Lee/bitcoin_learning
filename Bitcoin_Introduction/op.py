@@ -1,8 +1,4 @@
-import hashlib 
-
-
-
-
+from Module import *
 def op_0(stack):
     stack.append(encode_num(0))    
     return True 

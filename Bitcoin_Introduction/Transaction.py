@@ -1,9 +1,7 @@
-import hashlib
-import requests 
 from io import BytesIO
-from Bitcoin_S256Point import hash160
-import logging
+from Helper import *
 from op import * 
+from Module import * 
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +83,132 @@ class Tx:
         output_amount = sum([tx_out.amount for tx_out in self.tx_outs])
         # 3. 計算手續費
         return input_amount - output_amount
+    
+    def sig_hash(self, input_index):
+        """
+            □ Review transaction fields: Version, # of inputs, inputs, # of outputs, outputs, and locktime
+            □ s = int_to_little_endian(self.version, 4):
+                □ Start a byte‐array s with the 4-byte little-endian version field
+            □ s += encode_varint(len(self.tx_ins)):
+                □ Append the number of inputs (varint-encoded)
+        """
+        s = int.to_bytes(self.version, 'little')
+        s += encode_varint(len(self.tx_ins))
 
+        """
+            □ Serialize every input:
+                □ Each temp TxIn is serialized and appended to s
+                □ if i == input_index:
+                    ■ Replace its ScriptSig with the corresponding ScriptPubKey (standard rule for legacy signing)
+                    ■ 將此輸入的 ScriptSig 改成對應 UTXO 的 ScriptPubKey
+                □ else:
+                    ■ leave ScriptSig empty
+        """
+        for i, tx_in in enumerate(self.tx_ins):
+            if i == input_index:
+                s += TxIn(
+                    prev_tx = tx_in.txid,
+                    prev_index = tx_in.vout,
+                    script_sig = tx_in.script_pubkey(self.testnet),
+                    sequence = tx_in.sequence
+                ).serialize()
+            else:
+                s += TxIn(
+                    prev_tx = tx_in.txid,
+                    prev_index = tx_in.vout,
+                    sequence = tx_in.sequence,
+                ).serialize()
+
+        """
+            □ s += encode_varint(len(self.tx_outs))
+                □ Append the number of outputs (varint)
+            □ for tx_out in self.tx_outs:
+                □ s += tx_out.serialize()
+                □ Serialize every output (8-byte amount + ScriptPubKey) and append
+        """
+        s += encode_varint(len(self.tx_outs))
+        for tx_out in self.tx_outs:
+            s += tx_out.serialize()
+
+        """
+            □ Review fields:
+                Version, # of inputs, inputs, # of outputs, outputs, and locktime
+            □ s += int_to_little_endian(self.locktime, 4)
+                □ Append the 4-byte locktime
+            □ s += int_to_little_endian(SIGHASH_ALL, 4)
+                □ Append the hash-type (here SIGHASH_ALL == 1) as 4 little-endian bytes         
+        """
+        s += int.to_bytes(self.locktime, 'little')
+        s += int.to_bytes(1, 'little')
+
+        """
+            □ h256 = hash256(s)
+                □ Compute double SHA256 of the entire serialization
+            □ return int.from_bytes(h256, 'big’)
+                □ Return the 32-byte digest as a big-endian integer
+        """
+        h256 = hash256(s)
+        return int.from_bytes(h256, 'big')
+    
+    def verify_input(self, input_index):
+        """
+            ■ Use the TxIn.script_pubkey, Tx.sig_hash, and Script.evaluate methods
+            ■ tx_in = self.tx_ins[input_index]
+                ■ Pick the specific input we need to verify
+            ■ script_pubkey = tx_in.script_pubkey(…)
+                ■ Look up (via the referenced TXID / VOUT) the UTXO being spent and pull out its ScriptPubKey
+        """
+        tx_in = self.tx_ins[input_index] 
+        script_pubkey = tx_in.script_pubkey(self.testnet)
+        """
+            ■ z = self.sig_hash(input_index)
+                ■ Calculate the signature-hash (𝑧) for this input
+            ■ combined = tx_in.script_sig + script_pubkey
+                ■ Combine the unlocking script (ScriptSig) provided in the current input with the locking script (ScriptPubKey) retrieved before
+            ■ return combined.evaluate(z)
+                ■ Evaluate the combined script
+        """
+        z = self.sig_hash(input_index)
+        combined = tx_in.script_sig + script_pubkey
+        return combined.evaluate(z)
+    
+    def verify(self):
+        """ Verify the transaction """
+        """
+            1. Self.fee() < 0
+                □ Make sure that we are not creating money
+            2.if not self.verify_input(i):
+                □ Make sure that each input has a correct ScriptSig
+        """
+        if self.fee() < 0 :
+            return False 
+        for i in range(len(self.tx_ins)):
+            if not self.verify_input(i):
+                return False
+        return True
+    def sign_input(self, input_index, priv_key):
+        """
+            □ z = self.sig_hash(input_index)
+                □ Compute the signature hash z for this input(SIGHASH_ALL)
+            □ der = private_key.sign(z).der()
+                □ Generate an ECDSA signature over z and encode it in DER
+            □ sig = der + SIGHASH_ALL.to_bytes(1, 'big')
+                □ Append the 1-byte sighash-type (0x01) to obtain the signature
+            □ sec = private_key.point.sec()
+                □ Export the signer’s public key in SEC format
+            □ self.tx_ins[input_index].script_sig = Script([sig, sec])
+                □ Build a P2PKH-style ScriptSig([signature, pubkey]) and assign it to the chosen input
+            □ return self.verify_input(input_index)
+                □ Run the combined script to confirm the signature is valid; returns True or False
+
+        """
+        z = self.sig_hash(input_index)
+        der = priv_key.sign(z).der()
+        sig = der + bytes([1])  # SIGHASH_ALL
+        sec = priv_key.point.sec()
+        self.tx_ins[input_index].script_sig = Script([sig, sec])
+        
+        return self.verify_input(input_index)
 
 def read_varint(s):
     '''Read a variable-length integer from the stream'''

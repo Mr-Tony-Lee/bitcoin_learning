@@ -1,7 +1,8 @@
 from Finite_Field import FieldElement
 from Eliptic_curve import Point
-import hashlib
-import random
+from Helper import encode_base58, hash160 , hash256 , encode_base58_checksum
+from Module import *
+
 P = 2**256 - 2**32 - 977
 A = 0 
 B = 7
@@ -158,17 +159,6 @@ class S256Point(Point):
         # Step 3.
             # Add prefix (0x00 or 0x6f) to the Hash160 result
         return encode_base58_checksum(prefix + h160)
-    
-def hash160(s):
-    '''sha256 followed by ripemd160'''
-    # What is RIPEMD160?
-    # A cryptographic hash function based on the Merkle–Damgård construction
-    # An improved version of RIPEMD(RACE Integrity Primitives Evaluation Message Digest),
-    # increasing output size from 128-bit to 160-bit for better security
-    # The development idea of RIPEMD is based on MD4 which in itself is a weak hash function
-    
-    # digest() return the digest of the data -> 獲取雜湊值 (bytes)
-    return hashlib.new('ripemd160' , hashlib.sha256(s).digest()).digest()
 
 class Signature:
     def __init__(self, r , s ):
@@ -217,43 +207,6 @@ class Signature:
         return bytes([0x30, len(result)]) + result 
         #  0x30| Total Length(後6格的內容長度) | 0x02 | Length(𝑟) | 𝑟 | 0x02 | Length(𝑠) | 𝑠
     
-def encode_base58(s):
-    # Uses 58 characters : 10 digits + 26 uppercase letters + 26 + lowercase letters + ‘+’ + ‘/’ (in Base64)
-    # - 6 confusing characters (0, O, l, I, ‘+’ ,‘/’)
-    # Improves read
-    BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-    # Base64:
-    # Shorter but prone to errors (e.g., 0/O, l/I, + and /)
-    # Express 6 bits per character (log₂64=6) vs. Base58: log₂(58)≈5.86
-    # Uncompressed SEC: 87 bytes
-    # (65 bytes=65×8=520 bits, 520 bits/6=86.6≈87 characters)
-    # Compressed SEC: 44 bytes (33 bytes=33×8=264 bits 264 bits/6=44 character) 
-
-    count = 0 
-    for c in s :    # The loop is to determine how many of bytes at the front are 0 bytes
-        if c == 0 :
-            count += 1 
-        else:
-            break
-    num = int.from_bytes(s,'big')
-    prefix = '1' * count  # Add them back at the end
-    result = ''
-    while num > 0 : # The loop that figures out what Base58 digit to use
-        num , mod = divmod(num, 58)
-        result = BASE58_ALPHABET[mod] + result
-        # why cann't result += BASE58_ALPHABET[mod] , it will wrong (reverse)
-    return prefix + result 
-    
-def hash256(s): # double sha256 hashing 
-    return hashlib.sha256(hashlib.sha256(s).digest()).digest()
-    
-def encode_base58_checksum(b):
-    # Step 4. Checksum:
-        # Perform double SHA256 on the result from Step 3 
-        # Extract the first 4 bytes as the checksum
-    # Step 5. Encode:
-        # Combine Step 3 (Prefix+Hash160) and Step 4 (Checksum), then encode using Base58
-    return encode_base58(b + hash256(b)[:4])
     
 class PrivateKey:
     def __init__(self,secret):
