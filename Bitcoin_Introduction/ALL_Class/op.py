@@ -164,6 +164,47 @@ def op_equalverify(stack):
         raise ValueError("Equal verification failed: elements are not equal")
     return True
 
+def op_checkmultisig(stack : list , z):
+    from ALL_Class.Bitcoin_S256Point import S256Point , Signature
+    if len(stack) < 1:
+        return False
+    n = decode_num(stack.pop())
+    if len(stack) < n + 1:
+        return False
+    sec_pubkeys = []
+    for _ in range(n):
+        sec_pubkeys.append(stack.pop())
+    m = decode_num(stack.pop())
+    if len(stack) < m + 1:
+        return False
+    der_signatures = []
+    for _ in range(m):
+        der_signatures.append(stack.pop()[:-1])  # Each DER signature is assumed to be signed with SIGHASH_ALL 
+    stack.pop()  # Take care of the off-by-one error by consuming the only remaining element of the stack and not doing anything with the element
+    try:
+        for i in range(len(sec_pubkeys)):
+            sec_pubkeys[i] = S256Point.parse(sec_bin=sec_pubkeys[i])
+        for i in range(len(der_signatures)):
+            der_signatures[i] = Signature.parse(der_signatures[i])
+        
+        count_correct = 0 
+        pubkey_index = 0
+        sig_index = 0
+        
+        # 因為不能用跳過的pubkey -> 使用 index 
+        while sig_index < len(der_signatures) and pubkey_index < len(sec_pubkeys):
+            if sec_pubkeys[pubkey_index].verify(z, der_signatures[sig_index]):  # if success 
+                sig_index += 1  
+            pubkey_index += 1 # No matter what happen 
+        
+        if count_correct == len(der_signatures):
+            stack.append(1)
+        else:
+            stack.append(0)
+        # The part that you need to code for this problem
+    except (ValueError, SyntaxError):
+        return False
+
 OP_CODE_FUNCTIONS = {
     0 : op_0,
     86 : op_6, 
@@ -177,8 +218,8 @@ OP_CODE_FUNCTIONS = {
     168 : op_sha256,
     169 : op_hash160,
     170 : op_hash256,
-    172 : op_checksig
-    
+    172 : op_checksig,
+    174 : op_checkmultisig
 }
 
 OP_CODE_NAMES = {
@@ -194,7 +235,8 @@ OP_CODE_NAMES = {
     168 : "op_sha256",
     169 : "op_hash160",
     170 : "op_hash256",
-    172 : "op_checksig"
+    172 : "op_checksig",
+    174 : "op_checkmultisig"
 }
 
 def encode_num(num):
