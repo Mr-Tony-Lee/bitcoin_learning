@@ -1,7 +1,7 @@
-from Finite_Field import FieldElement
-from Eliptic_curve import Point
-from Helper import encode_base58, hash160 , hash256 , encode_base58_checksum
-from Module import *
+from ALL_Class.Finite_Field import FieldElement
+from ALL_Class.Eliptic_curve import Point
+from ALL_Class.Helper import encode_base58, hash160 , hash256 , encode_base58_checksum
+from ALL_Class.Module import *
 
 P = 2**256 - 2**32 - 977
 A = 0 

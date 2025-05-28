@@ -1,5 +1,5 @@
-from Eliptic_curve import Point
-from Finite_Field import FieldElement
+from ALL_Class.Eliptic_curve import Point
+from ALL_Class.Finite_Field import FieldElement
 
 prime = 11
 a = FieldElement(num = 0 ,prime = prime)

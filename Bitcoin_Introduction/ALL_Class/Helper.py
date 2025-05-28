@@ -1,5 +1,4 @@
-from Module import * 
-from Transaction import Script 
+from ALL_Class.Module import * 
 
 def hash160(s):
     '''sha256 followed by ripemd160'''
@@ -63,5 +62,63 @@ def decode_base58(s):
     return combined[1:-4] # remove prefix 0x00
 
 def p2pkh_script(h160):
+    from ALL_Class.Script import Script 
     """ Take a hash160 and return the p2pkh ScriptPubKey """
     return Script([0x76, 0xa9 ,h160 ,0x88, 0xac])
+
+
+def read_varint(s):
+    '''Read a variable-length integer from the stream'''
+    # 1. 讀取第一個字元
+    first_byte = s.read(1)[0]
+    # 2. 判斷長度
+    if first_byte == 0xfd:
+        # 0xfd, 代表後面有兩個位元組
+        return int.from_bytes(s.read(2), 'little')
+    elif first_byte == 0xfe:
+        # 0xfe, 代表後面有四個位元組
+        return int.from_bytes(s.read(4), 'little')
+    elif first_byte == 0xff:
+        # 0xff, 代表後面有八個位元組
+        return int.from_bytes(s.read(8), 'little')
+    else:
+        return first_byte
+    
+def encode_varint(n):
+    '''Encode a variable-length integer'''
+    if n < 0xfd:
+        return n.to_bytes(1, 'little')
+    elif n <= 0xffff:
+        return b'\xfd' + int_to_little_endian(n, 2)
+    elif n <= 0xffffffff:
+        return b'\xfe' + int_to_little_endian(n, 4)
+    elif n <= 0xffffffffffffffff:
+        return b'\xff' + int_to_little_endian(n, 8)
+    else:
+        return ValueError('integer too large:{}'.format(n))
+
+def little_endian_to_int(b):
+    '''Convert a little-endian byte string to an integer'''
+    return int.from_bytes(b, 'little')
+
+def int_to_little_endian(n, length):
+    '''Convert an integer to a little-endian byte string of a given length'''
+    if n < 0:
+        raise ValueError('n must be non-negative')
+    return n.to_bytes(length, 'little')
+
+def h160_to_p2pkh_address(h160, testnet=False):
+    """Convert a hash160 to a P2PKH address"""
+    if testnet:
+        prefix = b'\x6f'  # Testnet prefix
+    else:
+        prefix = b'\x00'  # Mainnet prefix
+    return encode_base58_checksum(prefix + h160)  # Add prefix and checksum
+
+def h160_to_p2sh_address(h160, testnet=False):
+    """Convert a hash160 to a P2SH address"""
+    if testnet:
+        prefix = b'\xc4'  # Testnet prefix
+    else:
+        prefix = b'\x05'  # Mainnet prefix
+    return encode_base58_checksum(prefix + h160)  # Add prefix and checksum

@@ -1,10 +1,12 @@
-from Module import *
+from ALL_Class.Module import *
+from ALL_Class.Helper import *
+
 def op_0(stack):
     stack.append(encode_num(0))    
     return True 
 
 
-def op_dup(stack):
+def op_dup(stack : list ):
     """
     Duplicates the top element of the stack.
     """
@@ -13,29 +15,28 @@ def op_dup(stack):
     stack.append(stack[-1])
     return True 
 
-def op_hash160(stack):
+def op_hash160(stack : list ):
     """
     Hashes the top element of the stack using SHA-256 followed by RIPEMD-160.
     """
     if len(stack) < 1:
         return False
     top_element = stack.pop()
-    hash_result = hashlib.new('ripemd160', hashlib.sha256(top_element).digest()).digest()
+    hash_result = hash160(top_element)
     stack.append(hash_result)
     return True
 
-def op_hash256(stack):
+def op_hash256(stack : list):
     """
     Hashes the top element of the stack using SHA-256 twice.
     """
     if len(stack) < 1:
         return False
-    top_element = stack.pop()
-    hash_result = hashlib.sha256(hashlib.sha256(top_element).digest()).digest()
-    stack.append(hash_result)
+    element = stack.pop()
+    stack.append(hash256(element))
     return True
 
-def op_ripemd160(stack):
+def op_ripemd160(stack : list ):
     """
     Hashes the top element of the stack using RIPEMD-160.
     """
@@ -114,37 +115,64 @@ def op_mul(stack):
 
 
 # Complete OP_add
-from ecdsa import VerifyingKey, SECP256k1, BadSignatureError
+from ecdsa import BadSignatureError
 import hashlib
 
 def op_checksig(stack, z):
-    if len(stack) < 2:
-        return False
-    pubkey = stack.pop()
-    signature = stack.pop()
+        if len(stack) < 2:
+            return False
+        pubkey = stack.pop()
+        signature = stack.pop()
 
-    # 移除最後一個字節的 hash type（SIGHASH_ALL）
-    signature = signature[:-1]
+        # 移除最後一個字節的 hash type（SIGHASH_ALL）
+        signature = signature[:-1]
+        try:
+        #     # 建立 VerifyingKey 物件
+        #     vk = VerifyingKey.from_string(pubkey, curve=SECP256k1)
 
-    try:
-        # 建立 VerifyingKey 物件
-        vk = VerifyingKey.from_string(pubkey, curve=SECP256k1)
-
-        # 驗證簽章（z 是事先算好的交易 hash）
-        if vk.verify(signature, z, hashfunc=hashlib.sha256):
-            stack.append(1)
-        else:
+        #     # 驗證簽章（z 是事先算好的交易 hash）
+        #     if vk.verify(signature, z, hashfunc=hashlib.sha256):
+        #         stack.append(1)
+        #     else:
+        #         stack.append(0)
+            if pubkey.verify(z , signature):
+                stack.append(1)
+            else:
+                stack.append(0)
+        except (BadSignatureError, ValueError):
             stack.append(0)
-    except (BadSignatureError, ValueError):
-        stack.append(0)
-
+        return True
+def op_verify(stack):
+    """
+    Verifies the top element of the stack.
+    If the top element is not true, it raises an error.
+    """
+    if len(stack) < 1:
+        return False
+    top_element = stack.pop()
+    if top_element != 1:
+        raise ValueError("Verification failed: top element is not true")
     return True
 
+def op_equalverify(stack):
+    """
+    Checks if the top two elements of the stack are equal.
+    If they are, it removes them; if not, it raises an error.
+    """
+    if len(stack) < 2:
+        return False
+    a = stack.pop()
+    b = stack.pop()
+    if a != b:
+        raise ValueError("Equal verification failed: elements are not equal")
+    return True
 
 OP_CODE_FUNCTIONS = {
     0 : op_0,
     86 : op_6, 
+    105 : op_verify,
     135 : op_equal, 
+    136 : op_equalverify,
     147 : op_add, 
     149 : op_mul, 
     118 : op_dup,
@@ -153,12 +181,15 @@ OP_CODE_FUNCTIONS = {
     169 : op_hash160,
     170 : op_hash256,
     172 : op_checksig
+    
 }
 
 OP_CODE_NAMES = {
     0 : "op_0",
     86 : "op_6", 
+    105 : "op_verify",
     135 : "op_equal", 
+    136 : "op_equalverify",
     147 : "op_add", 
     149 : "op_mul", 
     118 : "op_dup",
@@ -175,7 +206,7 @@ def encode_num(num):
     abs_num = abs(num)
     negative = num < 0 
     result = bytearray()
-    while abs_num > 0:
+    while abs_num:
         result.append(abs_num & 0xff)
         abs_num >>= 8
     
@@ -193,17 +224,22 @@ def decode_num(element):
     if element == b'':
         return 0 
     big_endian = element[::-1]
-    if big_endian[-1] & 0x80:
+    if big_endian[0] & 0x80:
         negative = True
-        big_endian[-1] &= 0x7f
+        result = big_endian[0] & 0x7f
     else:
         negative = False
         result = big_endian[0]
     
     for c in big_endian[1:]:
-        result = (result << 8) + c
+        result <<= 8
+        result += c 
     
     if negative:
-        result = -result
-    return result
+        return -result
+    else:
+        return result
 
+if __name__ == '__main__':
+    print(encode_num(-258)) ## b'\x02\x81'
+    print(decode_num(b'\x02\x81')) ## -258

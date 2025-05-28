@@ -1,4 +1,4 @@
-from Bitcoin_S256Point import * 
+from Bitcoin_Introduction.ALL_Class.Bitcoin_S256Point import * 
 
 
 print("-------------------------- Problem 1 --------------------------\n")
