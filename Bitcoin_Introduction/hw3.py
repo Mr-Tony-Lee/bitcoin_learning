@@ -21,13 +21,7 @@ print("\n-------------------------- Problem 1 --------------------------\n")
 
 print("-------------------------- Problem 2 --------------------------\n")
 def problem2():
-        
-    from ecdsa import VerifyingKey, SECP256k1, BadSignatureError
-    import hashlib
-
-    
     def check_checksig():
-        from ALL_Class.Helper import hash256, hash160
         from ALL_Class.Script import Script
         from ALL_Class.Bitcoin_S256Point import PrivateKey
         scriptpubkey = '43410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac'
@@ -37,9 +31,7 @@ def problem2():
         combined_script = script_sig + script_pubkey
         z = 0x7c076ff316692a3d7ebd292d4f6c744b3c48f5f05d39de12b4d4c1d1710f20ae
         print(combined_script.evaluate(z))
-
     check_checksig()
-
 problem2()
 print("\n-------------------------- Problem 2 --------------------------\n")
 
