@@ -93,6 +93,7 @@ class S256Point(Point):
     
 
     # Write a parse method in the S256Point class to figure out which 𝑦 we need when getting a serialized SEC pubkey:
+    @classmethod
     def parse(self, sec_bin):
         '''return a Point object from a SEC binary (not hex )'''
         if sec_bin[0] == 4 :    # Is uncompressed SEC format or not ? -> here is not compress -> \x04 x-cord y-cord
@@ -206,6 +207,29 @@ class Signature:
 
         return bytes([0x30, len(result)]) + result 
         #  0x30| Total Length(後6格的內容長度) | 0x02 | Length(𝑟) | 𝑟 | 0x02 | Length(𝑠) | 𝑠
+    @classmethod
+    def parse(cls, sig_bin):
+        from io import BytesIO
+        """
+        Parses a DER-encoded signature
+        Format: 0x30 total_length 0x02 r_length r 0x02 s_length s
+        """
+        s = BytesIO(sig_bin)
+        compound = s.read(1)[0]
+        if compound != 0x30:
+            raise ValueError("Bad Signature: Expected DER sequence")
+        length = s.read(1)[0]
+        marker = s.read(1)[0]
+        if marker != 0x02:
+            raise ValueError("Bad Signature: Expected integer for r")
+        r_length = s.read(1)[0]
+        r = int.from_bytes(s.read(r_length), 'big')
+        marker = s.read(1)[0]
+        if marker != 0x02:
+            raise ValueError("Bad Signature: Expected integer for s")
+        s_length = s.read(1)[0]
+        s_val = int.from_bytes(s.read(s_length), 'big')
+        return cls(r, s_val)
     
     
 class PrivateKey:

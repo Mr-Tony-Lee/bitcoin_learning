@@ -26,42 +26,17 @@ def problem2():
     import hashlib
 
     
-    def op_checksig(stack, z):
-        if len(stack) < 2:
-            return False
-        pubkey = stack.pop()
-        signature = stack.pop()
-
-        # 移除最後一個字節的 hash type（SIGHASH_ALL）
-        signature = signature[:-1]
-        try:
-        #     # 建立 VerifyingKey 物件
-        #     vk = VerifyingKey.from_string(pubkey, curve=SECP256k1)
-
-        #     # 驗證簽章（z 是事先算好的交易 hash）
-        #     if vk.verify(signature, z, hashfunc=hashlib.sha256):
-        #         stack.append(1)
-        #     else:
-        #         stack.append(0)
-            if pubkey.verify(z , signature):
-                stack.append(1)
-            else:
-                stack.append(0)
-        except (BadSignatureError, ValueError):
-            stack.append(0)
-        return True
     def check_checksig():
         from ALL_Class.Helper import hash256, hash160
         from ALL_Class.Script import Script
         from ALL_Class.Bitcoin_S256Point import PrivateKey
-        scriptpubkey = '410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac'
-        scriptsig = '47304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0901'
+        scriptpubkey = '43410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac'
+        scriptsig = '4847304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0901'
         script_pubkey = Script().parse(BytesIO(bytes.fromhex(scriptpubkey)))
         script_sig = Script().parse(BytesIO(bytes.fromhex(scriptsig)))
         combined_script = script_sig + script_pubkey
-        
-        print(combined_script.evaluate([]))
-
+        z = 0x7c076ff316692a3d7ebd292d4f6c744b3c48f5f05d39de12b4d4c1d1710f20ae
+        print(combined_script.evaluate(z))
 
     check_checksig()
 

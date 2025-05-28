@@ -119,6 +119,7 @@ from ecdsa import BadSignatureError
 import hashlib
 
 def op_checksig(stack, z):
+        from ALL_Class.Bitcoin_S256Point import S256Point , Signature
         if len(stack) < 2:
             return False
         pubkey = stack.pop()
@@ -126,16 +127,12 @@ def op_checksig(stack, z):
 
         # 移除最後一個字節的 hash type（SIGHASH_ALL）
         signature = signature[:-1]
+        
+        point = S256Point.parse(sec_bin=pubkey)
+        signature = Signature.parse(signature)
+        
         try:
-        #     # 建立 VerifyingKey 物件
-        #     vk = VerifyingKey.from_string(pubkey, curve=SECP256k1)
-
-        #     # 驗證簽章（z 是事先算好的交易 hash）
-        #     if vk.verify(signature, z, hashfunc=hashlib.sha256):
-        #         stack.append(1)
-        #     else:
-        #         stack.append(0)
-            if pubkey.verify(z , signature):
+            if point.verify(z , signature):
                 stack.append(1)
             else:
                 stack.append(0)
