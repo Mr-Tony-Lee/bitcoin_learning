@@ -73,7 +73,7 @@ class Script:
             raise TypeError('other must be a Script')
     def is_p2sh_script_pubkey(self):
         return len(self.cmds) == 3 and self.cmds[0] == 0xa9 and type(self.cmds[1]) == bytes and len(self.cmds[1]) == 20 and self.cmds[2] == 0x87
-    def evaluate(self , z : list):
+    def evaluate(self , z ):
         cmds = self.cmds[:]
         stack = []
         altstack = []
@@ -119,7 +119,7 @@ class Script:
         # 3. 判斷 stack 是否為空
         if len(stack) == 0:
             return False 
-        if stack.pop == b'':
+        if stack.pop() == b'':
             return False
         return True
     

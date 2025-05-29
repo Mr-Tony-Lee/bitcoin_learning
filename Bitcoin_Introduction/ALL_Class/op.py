@@ -1,15 +1,15 @@
 from ALL_Class.Module import *
 from ALL_Class.Helper import *
 
-def op_0(stack):
+def op_0(stack : list):
     stack.append(encode_num(0))    
     return True 
 
-def op_1(stack):
+def op_1(stack : list ):
     stack.append(encode_num(1))    
     return True 
 
-def op_2(stack):
+def op_2(stack:list):
     stack.append(encode_num(2))    
     return True 
 
@@ -54,7 +54,7 @@ def op_ripemd160(stack : list ):
     stack.append(hash_result)
     return True
 
-def op_sha256(stack):
+def op_sha256(stack : list ):
     """
     Hashes the top element of the stack using SHA-256.
     """
@@ -65,8 +65,8 @@ def op_sha256(stack):
     stack.append(hash_result)
     return True
 
-def op_6(stack):
-    stack.append(6)
+def op_6(stack : list ):
+    stack.append(encode_num(6))
     return True
 
 def op_equal(stack):
@@ -75,9 +75,9 @@ def op_equal(stack):
     a = stack.pop()
     b = stack.pop()
     if a == b:
-        stack.append(1)
+        stack.append(encode_num(1))
     else:
-        stack.append(0)
+        stack.append(encode_num(0))
     return True
 
 def op_add(stack):
@@ -90,10 +90,10 @@ def op_add(stack):
         a = int.from_bytes(a, 'big')
     if isinstance(b, bytes):
         b = int.from_bytes(b, 'big')
-    stack.append(a + b)
+    stack.append(encode_num(a + b))
     return True
 
-def op_mul(stack):
+def op_mul(stack : list ):
     if len(stack) < 2:
         return False
     a = stack.pop()
@@ -102,35 +102,36 @@ def op_mul(stack):
         a = int.from_bytes(a, 'big')
     if isinstance(b, bytes):
         b = int.from_bytes(b, 'big')
-    stack.append(a * b)
+    stack.append(encode_num(a * b))
     return True
 
 
 # Complete OP_add
-from ecdsa import BadSignatureError
 import hashlib
 
-def op_checksig(stack, z):
-        from ALL_Class.Bitcoin_S256Point import S256Point , Signature
-        if len(stack) < 2:
-            return False
-        pubkey = stack.pop()
-        signature = stack.pop()
+def op_checksig(stack : list , z):
+    from ALL_Class.Bitcoin_S256Point import S256Point , Signature
+    if len(stack) < 2:
+        return False
+    
+    pubkey = stack.pop()
+    signature = stack.pop()
 
-        # 移除最後一個字節的 hash type（SIGHASH_ALL）
-        signature = signature[:-1]
-        
-        point = S256Point.parse(sec_bin=pubkey)
-        signature = Signature.parse(signature)
-        
-        try:
-            if point.verify(z , signature):
-                stack.append(1)
-            else:
-                stack.append(0)
-        except (BadSignatureError, ValueError):
-            stack.append(0)
-        return True
+    # 移除最後一個字節的 hash type（SIGHASH_ALL）
+    signature = signature[:-1]
+    
+    point = S256Point.parse(sec_bin=pubkey)
+    signature = Signature.parse(signature)
+
+    try:
+        if point.verify(z , signature):
+            stack.append(encode_num(1))
+        else:
+            stack.append(encode_num(0))
+    except (ValueError, SyntaxError):
+        return False
+    return True 
+
 def op_verify(stack):
     """
     Verifies the top element of the stack.
@@ -190,9 +191,9 @@ def op_checkmultisig(stack : list , z):
                 sig_index += 1  
             pubkey_index += 1 # No matter what happen 
         if sig_index == len(der_signatures):
-            stack.append(1)
+            stack.append(encode_num(1))
         else:
-            stack.append(0)
+            stack.append(encode_num(0))
         # The part that you need to code for this problem
     except (ValueError, SyntaxError):
         return False
@@ -279,3 +280,6 @@ def decode_num(element):
 if __name__ == '__main__':
     print(encode_num(-258)) ## b'\x02\x81'
     print(decode_num(b'\x02\x81')) ## -258
+    print(encode_num(0))
+    print(encode_num(1))
+    print(encode_num(2))
