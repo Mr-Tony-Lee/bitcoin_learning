@@ -32,41 +32,25 @@ def problem2():
         hex_redeem_script = '475221022626e955ea6ea6d98850c994f9107b036b1334f18ca8830bfff1295d21cfdb702103b287eaf122eea69030a0e9feed096bed8045c8b98bec453e1ffac7fbdbd4bb7152ae'
         stream = BytesIO(bytes.fromhex(hex_tx))
         tx = Tx.parse(stream)
-        
-        # 2. Start with version
         modified_tx = int_to_little_endian(tx.version, 4) 
-
-        # 3. Add number of inputs
         modified_tx += encode_varint(len(tx.tx_ins))
-        
         for tx_in in tx.tx_ins:
             modified_tx += tx_in.prev_tx[::-1]
             modified_tx += int_to_little_endian(tx_in.prev_index, 4)
-
-            # 4. Modify the single TxIn to have the ScriptSig to be the RedeemScript
             modified_tx += bytes.fromhex(hex_redeem_script)
-
             modified_tx += int_to_little_endian(tx_in.sequence , 4)
-        
-        # 5. Add the number of outputs
         modified_tx += encode_varint(len(tx.tx_outs))
-        
-        # 6. Add each output serialization
         for tx_out in tx.tx_outs:
             modified_tx += tx_out.serialize()
-        # 7. Add the locktime
         modified_tx += int_to_little_endian(tx.locktime, 4)
-        
-        # 8. Add the SIGHASH_ALL
         modified_tx += int_to_little_endian(1, 4)
-        # 9. Hash256 the result
         h256 = hash256(modified_tx)
-        # 10. Interpret as a Big-Endian number
-        z = int.from_bytes(h256, 'big')
-        
+
+        z = int.from_bytes(h256, 'big')        
         script_pubkey = Script([sec , 0xac])
         script_sig = Script([der + b'\x01'])
         combined_script = script_sig + script_pubkey
+        
         print(combined_script.evaluate(z))
     check_checksig()
 problem2()
