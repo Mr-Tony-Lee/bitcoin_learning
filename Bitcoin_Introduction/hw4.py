@@ -1,6 +1,49 @@
 print("-------------------------- Problem 1 --------------------------\n")
 def problem1():
-    pass
+    from ALL_Class.Helper import hash256 , little_endian_to_int, decode_base58, p2pkh_script
+    from ALL_Class.Bitcoin_S256Point import PrivateKey
+    from ALL_Class.TxInput import TxIn
+    from ALL_Class.TxOutput import TxOut
+    from ALL_Class.Transaction import Tx
+    secret = little_endian_to_int(hash256(b'Tony Lee secret'))
+    private_key = PrivateKey(secret)
+    print(private_key.point.address(testnet= True))
+    """
+    We sent 0.0015832 bitcoins to address
+        myzg7gYLQDYpiduGEzsVAsiyX8CPp2m7a1
+
+    tx: 2ef0512ca5548b83b6bad06fe00871fc5704c210a5203610f39288e591d90f92
+    Send coins back, when you don't need them anymore to the address
+
+    tb1qerzrlxcfu24davlur5sqmgzzgsal6wusda40er
+    """
+    prev_tx = bytes.fromhex("2ef0512ca5548b83b6bad06fe00871fc5704c210a5203610f39288e591d90f92")
+    prev_index = 0 
+    script_sig = None 
+    sequence = 0xffffffff
+    target_address = "mqivhPWBNqd2Uk2gotT6AjACUeJMGYK6xz"
+    target_amount = 0.0015722
+    change_address = "myzg7gYLQDYpiduGEzsVAsiyX8CPp2m7a1"
+    change_amount = 0.000006
+
+    tx_ins = []
+    tx_ins.append(TxIn(prev_tx, prev_index,script_sig,sequence))
+    tx_outs = []
+    
+    h160 = decode_base58(target_address)
+    script_pubkey = p2pkh_script(h160)
+    target_satoshis = int(target_amount * 100000000)
+    tx_outs.append(TxOut(target_satoshis,script_pubkey))
+    
+    h160 = decode_base58(change_address)
+    script_pubkey = p2pkh_script(h160)
+    change_satoshis = int(change_amount * 100000000)
+    tx_outs.append(TxOut(change_satoshis,script_pubkey))
+    tx_obj = Tx(1,tx_ins,tx_outs, 0, testnet=True)
+
+    print(tx_obj.sign_input(0 , private_key))
+    print(tx_obj.serialize().hex())
+
 problem1()
 print("\n-------------------------- Problem 1 --------------------------\n")
 
@@ -8,8 +51,16 @@ print("\n-------------------------- Problem 1 --------------------------\n")
 print("-------------------------- Problem 2 --------------------------\n")
 def problem2():
     def checkmultisig():
-        pass
-    
+        # Wrong answer
+        from ALL_Class.Script import Script
+        from io import BytesIO
+        scriptpubkey = '4551410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a351ae'
+        scriptsig = '490047304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0901'
+        script_pubkey = Script().parse(BytesIO(bytes.fromhex(scriptpubkey)))
+        script_sig = Script().parse(BytesIO(bytes.fromhex(scriptsig)))  
+        combined_script = script_sig + script_pubkey
+        z = 0x7c076ff316692a3d7ebd292d4f6c744b3c48f5f05d39de12b4d4c1d1710f20ae
+        print(combined_script.evaluate(z))
     checkmultisig()
 problem2()
 print("\n-------------------------- Problem 2 --------------------------\n")

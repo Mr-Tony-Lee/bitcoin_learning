@@ -5,6 +5,13 @@ def op_0(stack):
     stack.append(encode_num(0))    
     return True 
 
+def op_1(stack):
+    stack.append(encode_num(1))    
+    return True 
+
+def op_2(stack):
+    stack.append(encode_num(2))    
+    return True 
 
 def op_dup(stack : list ):
     """
@@ -56,21 +63,6 @@ def op_sha256(stack):
     top_element = stack.pop()
     hash_result = hashlib.sha256(top_element).digest()
     stack.append(hash_result)
-    return True
-
-def op_checksig(stack):
-    """
-    Verifies a signature against a public key and message.
-    """
-    if len(stack) < 3:
-        return False
-    sig = stack.pop()
-    pubkey = stack.pop()
-    msg = stack.pop()
-    
-    # Here you would implement the actual signature verification logic
-    # For now, we will just append True to the stack to indicate success
-    stack.append(True)
     return True
 
 def op_6(stack):
@@ -181,13 +173,14 @@ def op_checkmultisig(stack : list , z):
     for _ in range(m):
         der_signatures.append(stack.pop()[:-1])  # Each DER signature is assumed to be signed with SIGHASH_ALL 
     stack.pop()  # Take care of the off-by-one error by consuming the only remaining element of the stack and not doing anything with the element
+    
     try:
         for i in range(len(sec_pubkeys)):
             sec_pubkeys[i] = S256Point.parse(sec_bin=sec_pubkeys[i])
+
         for i in range(len(der_signatures)):
             der_signatures[i] = Signature.parse(der_signatures[i])
         
-        count_correct = 0 
         pubkey_index = 0
         sig_index = 0
         
@@ -196,17 +189,19 @@ def op_checkmultisig(stack : list , z):
             if sec_pubkeys[pubkey_index].verify(z, der_signatures[sig_index]):  # if success 
                 sig_index += 1  
             pubkey_index += 1 # No matter what happen 
-        
-        if count_correct == len(der_signatures):
+        if sig_index == len(der_signatures):
             stack.append(1)
         else:
             stack.append(0)
         # The part that you need to code for this problem
     except (ValueError, SyntaxError):
         return False
+    return True
 
 OP_CODE_FUNCTIONS = {
     0 : op_0,
+    81 : op_1,
+    82 : op_2,
     86 : op_6, 
     105 : op_verify,
     135 : op_equal, 
@@ -224,6 +219,8 @@ OP_CODE_FUNCTIONS = {
 
 OP_CODE_NAMES = {
     0 : "op_0",
+    81 : "op_1",
+    82 : "op_2",
     86 : "op_6", 
     105 : "op_verify",
     135 : "op_equal", 

@@ -14,6 +14,7 @@ def hash160(s):
 BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 def encode_base58(s):
+    BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
     # Uses 58 characters : 10 digits + 26 uppercase letters + 26 + lowercase letters + ‘+’ + ‘/’ (in Base64)
     # - 6 confusing characters (0, O, l, I, ‘+’ ,‘/’)
     # Improves read    
@@ -52,6 +53,7 @@ def encode_base58_checksum(b):
 
 def decode_base58(s):
     num = 0 
+    BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
     for c in s:
         num *= 58
         num += BASE58_ALPHABET.index(c)
