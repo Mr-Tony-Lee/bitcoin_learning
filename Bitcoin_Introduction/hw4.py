@@ -1,53 +1,66 @@
 print("-------------------------- Problem 1 --------------------------\n")
 def problem1():
+    # 匯入所需模組
     from ALL_Class.Helper import hash256 , little_endian_to_int, decode_base58, p2pkh_script
     from ALL_Class.Bitcoin_S256Point import PrivateKey
     from ALL_Class.TxInput import TxIn
     from ALL_Class.TxOutput import TxOut
     from ALL_Class.Transaction import Tx
+    # 用 hash256("Tony Lee secret") 的小端整數當作私鑰來源
     secret = little_endian_to_int(hash256(b'Tony Lee secret'))
+    # 建立私鑰物件
     private_key = PrivateKey(secret)
+    # 印出對應的 testnet 地址（可驗證這組私鑰對應的收款地址）
     print(private_key.point.address(testnet=True))
     """
-    We sent 0.0015832 bitcoins to address
-        myzg7gYLQDYpiduGEzsVAsiyX8CPp2m7a1
-
-    tx: 2ef0512ca5548b83b6bad06fe00871fc5704c210a5203610f39288e591d90f92
-    Send coins back, when you don't need them anymore to the address
-
-    tb1qerzrlxcfu24davlur5sqmgzzgsal6wusda40er
+        這筆交易的目的：
+        我們要花掉以下這筆交易輸出中的比特幣：
+        來源 TXID: 2ef0512ca5548b83b6bad06fe00871fc5704c210a5203610f39288e591d90f92
+        輸出位置: 0
+        收款地址: myzg7gYLQDYpiduGEzsVAsiyX8CPp2m7a1 (找零用)
+        要匯出給：mqivhPWBNqd2Uk2gotT6AjACUeJMGYK6xz（目標地址）
     """
+    # 上一筆交易的 txid（hex 轉為 bytes）
     prev_tx = bytes.fromhex("2ef0512ca5548b83b6bad06fe00871fc5704c210a5203610f39288e591d90f92")
-    prev_index = 0 
+    # 要花的是第 0 個 output
+    prev_index = 0
+    # SegWit 不用 scriptSig，legacy P2PKH 用空白佔位
     script_sig = None 
+    # 預設 sequence（0xffffffff 表示不啟用 RBF）
     sequence = 0xffffffff
+    # 收款地址（目標地址）
     target_address = "mqivhPWBNqd2Uk2gotT6AjACUeJMGYK6xz"
+    # 要匯出的金額（BTC）
     target_amount = 0.0015722
+    # 找零地址（把剩餘錢轉回）
     change_address = "myzg7gYLQDYpiduGEzsVAsiyX8CPp2m7a1"
+    # 找零金額（BTC）
     change_amount = 0.000006
-
+    # 建立交易輸入清單
     tx_ins = []
-    tx_ins.append(TxIn(prev_tx, prev_index,script_sig,sequence))
+    tx_ins.append(TxIn(prev_tx, prev_index, script_sig, sequence))
+    # 建立交易輸出清單
     tx_outs = []
-    
-    h160 = decode_base58(target_address)
-    script_pubkey = p2pkh_script(h160)
-    target_satoshis = int(target_amount * 100000000)
-    tx_outs.append(TxOut(target_satoshis,script_pubkey))
-    
+    # === 建立目標地址的輸出 ===
+    h160 = decode_base58(target_address)  # 解碼 base58 得到 hash160
+    script_pubkey = p2pkh_script(h160)    # 建立 P2PKH 的鎖定腳本
+    target_satoshis = int(target_amount * 100_000_000)  # 轉為 satoshi
+    tx_outs.append(TxOut(target_satoshis, script_pubkey))  # 新增輸出
+    # === 建立找零地址的輸出 ===
     h160 = decode_base58(change_address)
     script_pubkey = p2pkh_script(h160)
-    change_satoshis = int(change_amount * 100000000)
-    tx_outs.append(TxOut(change_satoshis,script_pubkey))
-    tx_obj = Tx(1,tx_ins,tx_outs, 0, testnet=True)
-
-    print(tx_obj.sign_input(0 , private_key))
+    change_satoshis = int(change_amount * 100_000_000)
+    tx_outs.append(TxOut(change_satoshis, script_pubkey))
+    # 建立整筆交易物件（版本 1，locktime = 0）
+    tx_obj = Tx(1, tx_ins, tx_outs, 0, testnet=True)
+    # 簽署第 0 筆輸入（就是唯一的那一筆）
+    print(tx_obj.sign_input(0, private_key))  # True 表示簽章成功
+    # 輸出序列化後的交易 hex 字串
     print(tx_obj.serialize().hex())
-
-# problem1()
+problem1()
 print("\n-------------------------- Problem 1 --------------------------\n")
 
-def gettestz():
+def Get_Test_z():
     from io import BytesIO
     from ALL_Class.Helper import encode_varint, hash256, int_to_little_endian
     from ALL_Class.Transaction import Tx
@@ -85,7 +98,7 @@ def problem2():
         script_sig = Script([0x00 , der+b'\x01' , 0x51])
         combined_script = script_sig + script_pubkey
 
-        z = gettestz()
+        z = Get_Test_z()
         print(combined_script.evaluate(z))
     checkmultisig()
 problem2()
