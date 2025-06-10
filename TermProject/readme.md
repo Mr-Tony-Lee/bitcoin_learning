@@ -13,6 +13,8 @@
 trans_eoa_ca.csv , trans_eoa_eoa.csv
 - dataset/Ponzi_unbalance/CA.csv, EOA_labeled.csv, EOA_unlabeled.csv
 
+## TermProject相關連結 (簡報、論文、Demo vedio)
+雲端: https://drive.google.com/drive/folders/1ieKEYyvMFj9QBC8JwrpJRMUsj1KruDFY?usp=drive_link
 
 ## Meta-IFD
 
