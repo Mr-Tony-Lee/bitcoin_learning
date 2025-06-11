@@ -51,7 +51,18 @@ and saves the graph to `/data`.
 
 ```bash
 python run.py  --dataset Phish --hidden 4 --lr 0.01 --loss_train 0.5 --concat 1 --batch_size 128 --epochs 1 
+python run.py  --dataset Phish --hidden 8 --lr 0.01 --loss_train 0.5 --concat 1 --batch_size 128 --epochs 1 
+python run.py  --dataset Phish --hidden 4 --lr 0.02 --loss_train 0.5 --concat 1 --batch_size 128 --epochs 1 
+python run.py  --dataset Phish --hidden 4 --lr 0.01 --loss_train 0.5 --concat 2 --batch_size 128 --epochs 1 
+python run.py  --dataset Phish --hidden 4 --lr 0.01 --loss_train 0.5 --concat 2 --batch_size 256 --epochs 1 
+
+python run.py  --dataset Phish --hidden 4 --lr 0.01 --loss_train 0.5 --concat 1 --batch_size 128 --epochs 10 
+python run.py  --dataset Phish --hidden 8 --lr 0.01 --loss_train 0.5 --concat 1 --batch_size 128 --epochs 10 
+python run.py  --dataset Phish --hidden 4 --lr 0.02 --loss_train 0.5 --concat 1 --batch_size 128 --epochs 10 
 python run.py  --dataset Phish --hidden 4 --lr 0.01 --loss_train 0.5 --concat 2 --batch_size 128 --epochs 10
+python run.py  --dataset Phish --hidden 4 --lr 0.01 --loss_train 0.5 --concat 2 --batch_size 256 --epochs 10
+
+python run.py  --dataset Phish --hidden 4 --lr 0.01 --loss_train 0.5 --concat 1 --batch_size 128 --epochs 5
 ```
 
 ## Reference
