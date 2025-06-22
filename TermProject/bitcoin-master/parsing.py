@@ -28,8 +28,7 @@ def parsing(blockchain_path, index_path, end, out_dir):
                     total_val = 0
                     for ou in t.outputs:
                         if isvalid(ou):
-                            outputs.append( {'value':ou.value,\
-                                            'address':ou.addresses[0].address})
+                            outputs.append( {'value':ou.value,'address':ou.addresses[0].address})
                             total_val += ou.value
                     # store the indexed outputs in memory
                     if len(outputs)>0:
@@ -44,8 +43,7 @@ def parsing(blockchain_path, index_path, end, out_dir):
                             if i.transaction_hash != COINBASE:
                                 prev_hash = i.transaction_hash
                                 index = i.transaction_index
-                                if not prev_hash in trans or \
-                                               not index in trans[prev_hash]:
+                                if not prev_hash in trans or not index in trans[prev_hash]:
                                     continue
                                 prev_ou = trans[prev_hash][index]
                                 prev_addr = prev_ou['address']
@@ -79,7 +77,7 @@ if __name__ == '__main__':
     _out_dir = open(sys.argv[3],'a')
 
     end = datetime.datetime(int(_end[0]),int(_end[1]),int(_end[2]))
-    if out_dir[0:2]=='./':
+    if _out_dir[0:2]=='./':
         out_dir = _out_dir
     else:
         out_dir = './'+_out_dir
