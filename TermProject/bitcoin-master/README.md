@@ -62,9 +62,9 @@ You can install the required python packages by running the following commands U
 For parsing, make sure you have the bitcoin blockchain ready in *blockchain_path*. You need to specify the date of the last blockchain you want to parse as *end_date*  and the directory for the parsing results as *out_dir* in *YYYY-MM-DD* format. 
 
 Run in terminal:
-
+- bitcoin start in 2009-01-03
 ```
-python3 parsing.py blockchain_path end_date out_dir
+python3 parsing.py /mnt/c/Users/Tony/AppData/Local/bitcoin/blocks/ 2009-01-04 ./output
 ```
 
 For linking, you need to the parsed data ready and specify the directory of the results as *direc*. 
