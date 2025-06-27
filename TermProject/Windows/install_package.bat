@@ -1,5 +1,4 @@
 @echo off
-TITLE Bitcoin Project Package Installer
 
 REM 設定虛擬環境的資料夾名稱
 SET VENV_NAME=venv_bitcoin
@@ -9,6 +8,7 @@ echo --- Step 1: Checking for Python ---
 REM 檢查 Python 是否已安裝並在系統路徑中
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
+    echo.
     echo Python is not found. Attempting to install using Winget...
     
     REM 檢查 Winget 是否存在
@@ -52,35 +52,32 @@ if not exist %VENV_NAME% (
 echo.
 echo --- Step 3: Activating virtual environment ---
 REM 啟用虛擬環境
-call .\%VENV_NAME%\Scripts\activate.bat
+.\%VENV_NAME%\Scripts\activate.ps1
 echo Virtual environment activated.
 
 echo.
 echo --- Step 4: Creating requirements.txt file ---
-REM 建立一個包含所有必要套件的 requirements.txt 檔案
-(
-    echo psutil
-    echo pandas
-    echo blockchain_parser
-    echo numpy
-    echo tensorflow
-    echo yfinance
-    echo matplotlib
-    echo scikit-learn
-    echo statsmodels
-    echo pytorch
-    echo torch-geometric
-    echo fastai
-    echo statsmodels
-    echo typing 
-    echo torch
-    echo argparse
-    echo random
-    echo gc
-    echo networkx
-    echo datetime
-) > requirements.txt
-echo requirements.txt created.
+pip install psutil
+pip install pandas
+pip install blockchain_parser
+pip install numpy
+pip install tensorflow
+pip install yfinance
+pip install matplotlib
+pip install scikit-learn
+pip install statsmodels
+pip install pytorch
+pip install torch-geometric
+pip install fastai
+pip install statsmodels
+pip install typing 
+pip install torch
+pip install argparse
+pip install random
+pip install gc
+pip install networkx
+pip install datetime
+echo install end.
 
 echo.
 echo --- Step 5: Installing required packages ---
@@ -93,6 +90,6 @@ echo      Installation Complete!
 echo ==================================================
 echo.
 echo To activate this environment again in the future, run this command:
-echo %VENV_NAME%\Scripts\activate.bat
+echo %VENV_NAME%\Scripts\activate.ps1
 echo.
 pause
